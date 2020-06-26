@@ -35,24 +35,40 @@ func crc(data []byte) uint16 {
 // application data unit (ADU)
 func (frame *RTUFrame) GenerateRTUFrame() []byte {
 
-	packetLen := 8
-	if len(frame.Data) > 0 {
+	insertNumOfRegister := true
+	insertDataLen := false
+	switch frame.FunctionCode {
+	case FUNCTION_WRITE_SINGLE_COIL, FUNCTION_WRITE_SINGLE_REGISTER:
+		insertNumOfRegister = false
+	case FUNCTION_WRITE_MULTIPLE_REGISTERS:
+		insertDataLen = true
+	}
+	packetLen := 9
+	dataLen := len(frame.Data)
+	if dataLen > 0 {
 		packetLen = RTU_FRAME_MAXSIZE
 	}
 
 	packet := make([]byte, packetLen)
 	packet[0] = frame.SlaveAddress
 	packet[1] = frame.FunctionCode
-	packet[2] = byte(frame.StartRegister >> 8)       // (High Byte)
-	packet[3] = byte(frame.StartRegister & 0xff)     // (Low Byte)
-	packet[4] = byte(frame.NumberOfRegisters >> 8)   // (High Byte)
-	packet[5] = byte(frame.NumberOfRegisters & 0xff) // (Low Byte)
-	bytesUsed := 6
+	packet[2] = byte(frame.StartRegister >> 8)   // (High Byte)
+	packet[3] = byte(frame.StartRegister & 0xff) // (Low Byte)
+	bytesUsed := 4
+	if insertNumOfRegister {
+		packet[bytesUsed] = byte(frame.NumberOfRegisters >> 8)         // (High Byte)
+		packet[(bytesUsed + 1)] = byte(frame.NumberOfRegisters & 0xff) // (Low Byte)
+		bytesUsed += 2
+	}
+	if insertDataLen {
+		packet[bytesUsed] = byte(dataLen)
+		bytesUsed++
+	}
 
-	for i := 0; i < len(frame.Data); i++ {
+	for i := 0; i < dataLen; i++ {
 		packet[(bytesUsed + i)] = frame.Data[i]
 	}
-	bytesUsed += len(frame.Data)
+	bytesUsed += dataLen
 
 	// add the crc to the end
 	packet_crc := crc(packet[:bytesUsed])
