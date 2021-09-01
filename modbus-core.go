@@ -1,7 +1,6 @@
 // Package modbusclient provides modbus Serial Line/RTU and TCP/IP access
 // for client (master) applications to communicate with server (slave)
 // devices. This file specifies core definitions and data structures.
-
 package modbusclient
 
 import (

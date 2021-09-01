@@ -1,7 +1,6 @@
 // Package modbusclient provides modbus Serial Line/RTU and TCP/IP access
 // for client (master) applications to communicate with server (slave)
 // devices. Logic specifically in this file implements the TCP/IP protocol.
-
 package modbusclient
 
 import (

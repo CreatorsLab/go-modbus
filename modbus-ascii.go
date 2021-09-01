@@ -2,7 +2,6 @@
 // for client (master) applications to communicate with server (slave)
 // devices. Logic specifically in this file implements the Serial Line/ASCII
 // protocol.
-
 package modbusclient
 
 import (
@@ -60,23 +59,23 @@ func (frame *ASCIIFrame) GenerateASCIIFrame() []byte {
 	bytesUsed += len(frame.Data)
 
 	// add the lrc to the end
-	packet_lrc := lrc(packet[:bytesUsed])
-	packet[bytesUsed] = byte(packet_lrc)
-	bytesUsed += 1
+	packetLrc := lrc(packet[:bytesUsed])
+	packet[bytesUsed] = byte(packetLrc)
+	bytesUsed++
 
 	// Convert raw bytes to ASCII packet
-	ascii_packet := make([]byte, bytesUsed*2+3)
-	hex.Encode(ascii_packet[1:], packet)
+	asciiPacket := make([]byte, bytesUsed*2+3)
+	hex.Encode(asciiPacket[1:], packet)
 
 	asciiBytesUsed := bytesUsed*2 + 1
 
 	// Frame the packet
-	ascii_packet[0] = ':'                 // 0x3A
-	ascii_packet[asciiBytesUsed] = '\r'   // CR 0x0D
-	ascii_packet[asciiBytesUsed+1] = '\n' // LF 0x0A
+	asciiPacket[0] = ':'                 // 0x3A
+	asciiPacket[asciiBytesUsed] = '\r'   // CR 0x0D
+	asciiPacket[asciiBytesUsed+1] = '\n' // LF 0x0A
 	asciiBytesUsed += 2
 
-	return bytes.ToUpper(ascii_packet[:asciiBytesUsed])
+	return bytes.ToUpper(asciiPacket[:asciiBytesUsed])
 }
 
 // ConnectASCII attempts to access the Serial Device for subsequent
@@ -131,8 +130,8 @@ func viaASCII(connection io.ReadWriteCloser, fnValidator func(byte) bool, slaveA
 		time.Sleep(time.Duration(frame.TimeoutInMilliseconds) * time.Millisecond)
 
 		// then attempt to read the reply
-		ascii_response := make([]byte, ASCII_FRAME_MAXSIZE)
-		ascii_n, rerr := connection.Read(ascii_response)
+		asciiResponse := make([]byte, ASCII_FRAME_MAXSIZE)
+		asciiN, rerr := connection.Read(asciiResponse)
 		if rerr != nil {
 			if debug {
 				log.Println(fmt.Sprintf("ASCII Read Err: %s", rerr))
@@ -141,20 +140,20 @@ func viaASCII(connection io.ReadWriteCloser, fnValidator func(byte) bool, slaveA
 		}
 
 		// check the framing of the response
-		if ascii_response[0] != ':' ||
-			ascii_response[ascii_n-2] != '\r' ||
-			ascii_response[ascii_n-1] != '\n' {
+		if asciiResponse[0] != ':' ||
+			asciiResponse[asciiN-2] != '\r' ||
+			asciiResponse[asciiN-1] != '\n' {
 			if debug {
 				log.Println("ASCII Response Framing Invalid")
-				log.Println(fmt.Sprintf("%s", ascii_response))
+				log.Println(fmt.Sprintf("%s", asciiResponse))
 			}
 			return []byte{}, MODBUS_EXCEPTIONS[EXCEPTION_UNSPECIFIED]
 		}
 
 		// convert to raw bytes
-		raw_n := (ascii_n - 3) / 2
-		response := make([]byte, raw_n)
-		hex.Decode(response, ascii_response[1:ascii_n-2])
+		rawN := (asciiN - 3) / 2
+		response := make([]byte, rawN)
+		hex.Decode(response, asciiResponse[1:asciiN-2])
 
 		// check the validity of the response
 		if response[0] != frame.SlaveAddress || response[1] != frame.FunctionCode {
@@ -177,8 +176,8 @@ func viaASCII(connection io.ReadWriteCloser, fnValidator func(byte) bool, slaveA
 		}
 
 		// confirm the checksum (lrc)
-		response_lrc := lrc(response[:raw_n-1])
-		if response[raw_n-1] != response_lrc {
+		responseLrc := lrc(response[:rawN-1])
+		if response[rawN-1] != responseLrc {
 			// lrc failed (odd that there's no specific code for it)
 			if debug {
 				log.Println("ASCII Response Invalid: Bad Checksum")

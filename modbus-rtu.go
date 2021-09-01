@@ -2,7 +2,6 @@
 // for client (master) applications to communicate with server (slave)
 // devices. Logic specifically in this file implements the Serial Line/RTU
 // protocol.
-
 package modbusclient
 
 import (
@@ -71,9 +70,9 @@ func (frame *RTUFrame) GenerateRTUFrame() []byte {
 	bytesUsed += dataLen
 
 	// add the crc to the end
-	packet_crc := crc(packet[:bytesUsed])
-	packet[bytesUsed] = byte(packet_crc & 0xff)
-	packet[(bytesUsed + 1)] = byte(packet_crc >> 8)
+	packetCrc := crc(packet[:bytesUsed])
+	packet[bytesUsed] = byte(packetCrc & 0xff)
+	packet[(bytesUsed + 1)] = byte(packetCrc >> 8)
 	bytesUsed += 2
 
 	return packet[:bytesUsed]
@@ -160,9 +159,9 @@ func viaRTU(connection io.ReadWriteCloser, fnValidator func(byte) bool, slaveAdd
 		}
 
 		// confirm the checksum (crc)
-		response_crc := crc(response[:(n - 2)])
-		if response[(n-2)] != byte((response_crc&0xff)) ||
-			response[(n-1)] != byte((response_crc>>8)) {
+		responseCrc := crc(response[:(n - 2)])
+		if response[(n-2)] != byte((responseCrc&0xff)) ||
+			response[(n-1)] != byte((responseCrc>>8)) {
 			// crc failed (odd that there's no specific code for it)
 			if debug {
 				log.Println("RTU Response Invalid: Bad Checksum")
