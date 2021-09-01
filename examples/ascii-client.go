@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/AdamSLevy/go-modbus"
+	"github.com/CreatorsLab/go-modbus"
 )
 
 func main() {
