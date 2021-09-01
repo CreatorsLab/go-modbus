@@ -9,7 +9,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
-	"github.com/tarm/goserial"
+	"github.com/tarm/serial"
 	"io"
 	"log"
 	"time"

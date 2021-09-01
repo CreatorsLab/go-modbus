@@ -7,7 +7,7 @@ package modbusclient
 
 import (
 	"fmt"
-	"github.com/tarm/goserial"
+	"github.com/tarm/serial"
 	"io"
 	"log"
 	"time"
